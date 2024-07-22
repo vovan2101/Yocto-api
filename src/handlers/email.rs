@@ -9,23 +9,23 @@ use oauth2::basic::BasicClient;
 use crate::handlers::send_email::send_email_oauth2;
 
 lazy_static! {
-    pub static ref AUTH_CODE: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None)); // Сделайте AUTH_CODE публичной
+    pub static ref AUTH_CODE: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 }
 
 #[derive(Deserialize)]
-pub struct AuthQuery { // Сделайте AuthQuery публичной
+pub struct AuthQuery {
     pub code: String,
 }
 
 pub async fn oauth2_callback(Query(query): Query<AuthQuery>) -> Html<&'static str> {
     let mut auth_code = AUTH_CODE.lock().unwrap();
     *auth_code = Some(query.code.clone());
-    println!("Authorization code received: {:?}", query.code); // Логирование кода авторизации
+    println!("Authorization code received: {:?}", query.code);
     Html("<h1>Authorization code received. You can now send email.</h1>")
 }
 
 pub async fn authorize() -> &'static str {
-    let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";
+    // let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";
     let redirect_url = "http://localhost:3001/oauth2/callback";
 
     let (auth_url, _csrf_token) = generate_oauth_url(client_id, redirect_url);
@@ -35,9 +35,9 @@ pub async fn authorize() -> &'static str {
 }
 
 pub async fn test_send_email() -> &'static str {
-    let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";  // Замените на ваш правильный client_id
-    let client_secret = "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";  // Замените на ваш правильный client_secret
-    let redirect_url = "http://localhost:3001/oauth2/callback";  // URL перенаправления
+    // let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";
+    // let client_secret = "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";
+    let redirect_url = "http://localhost:3001/oauth2/callback";
 
     let auth_code = {
         let auth_code = AUTH_CODE.lock().unwrap();
@@ -47,7 +47,7 @@ pub async fn test_send_email() -> &'static str {
         })
     };
 
-    println!("Using authorization code: {:?}", auth_code); // Логирование кода авторизации
+    println!("Using authorization code: {:?}", auth_code);
 
     let email = "vladeliseykin2101@gmail.com";
     let subject = "Test";
@@ -79,7 +79,7 @@ pub fn generate_oauth_url(client_id: &str, redirect_url: &str) -> (String, CsrfT
 
     let (auth_url, csrf_token) = client
         .authorize_url(CsrfToken::new_random)
-        .add_scope(Scope::new("https://mail.google.com/".to_string())) // Правильный scope
+        .add_scope(Scope::new("https://mail.google.com/".to_string()))
         .url();
 
     (auth_url.to_string(), csrf_token)

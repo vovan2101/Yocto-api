@@ -41,9 +41,8 @@ pub async fn handle_survey(
         matching_investors.push(investor);
     }
 
-    // Генерация OAuth URL для авторизации
-    let client_id = "your-client-id";
-    let client_secret = "your-client-secret";
+    // let client_id = "your-client-id";
+    // let client_secret = "your-client-secret";
     let redirect_url = "http://localhost:3001/oauth2/callback";
 
     let (auth_url, _csrf_token) = generate_oauth_url(client_id, redirect_url);
