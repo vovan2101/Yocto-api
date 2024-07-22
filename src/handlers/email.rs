@@ -5,6 +5,7 @@ use std::sync::Arc;
 use lazy_static::lazy_static;
 use oauth2::{AuthUrl, ClientId, RedirectUrl, CsrfToken, Scope};
 use oauth2::basic::BasicClient;
+use std::env;
 
 use crate::handlers::send_email::send_email_oauth2;
 
@@ -25,19 +26,19 @@ pub async fn oauth2_callback(Query(query): Query<AuthQuery>) -> Html<&'static st
 }
 
 pub async fn authorize() -> &'static str {
-    // let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";
-    let redirect_url = "http://localhost:3001/oauth2/callback";
+    let client_id = env::var("CLIENT_ID").expect("CLIENT_ID must be set");
+    let redirect_url = env::var("REDIRECT_URL").expect("REDIRECT_URL must be set");
 
-    let (auth_url, _csrf_token) = generate_oauth_url(client_id, redirect_url);
+    let (auth_url, _csrf_token) = generate_oauth_url(&client_id, &redirect_url);
     println!("Please go to this URL and authorize the application: {}", auth_url);
 
     "Authorization URL generated. Please check the server logs."
 }
 
 pub async fn test_send_email() -> &'static str {
-    // let client_id = "518166397198-stt0k6d7q2c804m4j6dr402q10gko17c.apps.googleusercontent.com";
-    // let client_secret = "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";
-    let redirect_url = "http://localhost:3001/oauth2/callback";
+    let client_id = env::var("CLIENT_ID").expect("CLIENT_ID must be set");
+    let client_secret = env::var("CLIENT_SECRET").expect("CLIENT_SECRET must be set");
+    let redirect_url = env::var("REDIRECT_URL").expect("REDIRECT_URL must be set");
 
     let auth_code = {
         let auth_code = AUTH_CODE.lock().unwrap();
@@ -56,7 +57,7 @@ pub async fn test_send_email() -> &'static str {
 
     println!("Starting email send process...");
 
-    match send_email_oauth2(email, subject, body, from_email, &auth_code, client_id, client_secret, redirect_url).await {
+    match send_email_oauth2(email, subject, body, from_email, &auth_code, &client_id, &client_secret, &redirect_url).await {
         Ok(_) => {
             println!("Email sent successfully!");
             "Email sent successfully!"

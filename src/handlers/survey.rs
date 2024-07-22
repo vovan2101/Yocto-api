@@ -4,6 +4,7 @@ use mongodb::{Client, bson::doc};
 use mongodb::options::AggregateOptions;
 use futures::stream::TryStreamExt;
 use std::sync::Arc;
+use std::env;
 use crate::models::investorInfo::InvestorInfo;
 use crate::models::survey::{SurveyResponse, SurveyResult};
 use crate::handlers::send_email::send_email_oauth2;
@@ -14,7 +15,6 @@ pub async fn handle_survey(
     Extension(mongo_client): Extension<Arc<Client>>,
 ) -> Result<Json<SurveyResult>, StatusCode> {
     println!("Received survey payload: {:?}", payload);
-    // let industry = payload.answers.get(2).cloned().unwrap_or_default();
     let fixed_industry = "Software";
     println!("Starting survey handling with fixed industry: {}", fixed_industry);
 
@@ -25,7 +25,7 @@ pub async fn handle_survey(
     // Параметры агрегации
     let aggregate_pipeline = vec![
         doc! { "$match": { "Preferred Sectors": { "$exists": true }, "Email": { "$exists": true } } },
-        doc! { "$match": { "Preferred Sectors": fixed_industry } }, //industry.clone()
+        doc! { "$match": { "Preferred Sectors": fixed_industry } },
         doc! { "$limit": 100 }
     ];
     let aggregate_options = AggregateOptions::builder().build();
@@ -41,15 +41,13 @@ pub async fn handle_survey(
         matching_investors.push(investor);
     }
 
-    // let client_id = "your-client-id";
-    // let client_secret = "your-client-secret";
-    let redirect_url = "http://localhost:3001/oauth2/callback";
+    let client_id = env::var("CLIENT_ID").expect("CLIENT_ID must be set");
+    let client_secret = env::var("CLIENT_SECRET").expect("CLIENT_SECRET must be set");
+    let redirect_url = env::var("REDIRECT_URL").expect("REDIRECT_URL must be set");
 
-    let (auth_url, _csrf_token) = generate_oauth_url(client_id, redirect_url);
+    let (auth_url, _csrf_token) = generate_oauth_url(&client_id, &redirect_url);
     println!("Please go to this URL and authorize the application: {}", auth_url);
 
-    // Получение кода авторизации
-    // В реальной ситуации, это должно быть обработано через веб-интерфейс
     let auth_code = {
         let auth_code = AUTH_CODE.lock().unwrap();
         auth_code.clone().unwrap_or_else(|| {
@@ -58,13 +56,12 @@ pub async fn handle_survey(
         })
     };
 
-    // Отправка одного тестового email
     let email = "vladeliseykin2101@gmail.com";
     let subject = "Test";
     let body = "Test";
     let from_email = "veliseykin2000@gmail.com";
 
-    match send_email_oauth2(email, subject, body, from_email, &auth_code, client_id, client_secret, redirect_url).await {
+    match send_email_oauth2(email, subject, body, from_email, &auth_code, &client_id, &client_secret, &redirect_url).await {
         Ok(_) => println!("Email sent to {}", email),
         Err(e) => println!("Failed to send email to {}: {:?}", email, e),
     }
