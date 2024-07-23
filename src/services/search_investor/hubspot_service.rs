@@ -1,15 +1,13 @@
 use reqwest::Client;
 use serde_json::Value;
 use std::error::Error;
-use crate::models::investorInfo::InvestorInfo;
+use crate::models::investor_info::InvestorInfo;
 
-pub async fn fetch_contacts_from_hubspot(client: &Client, ai_api_key: &str, investor_name: &str) -> Result<Vec<InvestorInfo>, Box<dyn Error + Send + Sync>> {
+pub async fn fetch_hubspot_contacts(client: &Client, ai_api_key: &str, investor_name: &str) -> Result<Vec<InvestorInfo>, Box<dyn Error + Send + Sync>> {
     let url = format!("https://api.hubapi.com/contacts/v1/search/query?q={}", investor_name);
     let response = client.get(url).bearer_auth(ai_api_key).send().await?;
     let response_text = response.text().await?;
     let response_json: Value = serde_json::from_str(&response_text)?;
-    // println!("{:?}", response_json);
-
     let mut investor_infos = Vec::new();
 
     if let Some(contacts) = response_json.get("contacts").and_then(|c| c.as_array()) {
@@ -24,7 +22,6 @@ pub async fn fetch_contacts_from_hubspot(client: &Client, ai_api_key: &str, inve
             let details_response = client.get(&details_url).bearer_auth(ai_api_key).send().await?;
             let details_response_text = details_response.text().await?;
             let details_response_json: Value = serde_json::from_str(&details_response_text)?;
-            // println!("Details Response: {:?}", details_response_json);
 
             for vid in vids {
                 if let Some(contact) = details_response_json.get(&vid.to_string()) {
@@ -36,13 +33,13 @@ pub async fn fetch_contacts_from_hubspot(client: &Client, ai_api_key: &str, inve
                     let email = contact.get("properties").and_then(|p| p.get("email")).and_then(|e| e.get("value")).unwrap_or(&Value::Null).as_str().unwrap_or("").to_string();
 
                     let investor_info = InvestorInfo {
-                        name: Some(name.to_string()),  // или None, если значение отсутствует
-                        company: Some(company.to_string()),  // или None
-                        description: Some(description.to_string()),  // или None
-                        city: Some(city.to_string()),  // или None
-                        phone_number: Some(phone.to_string()),  // или None
-                        email: Some(email.to_string()),  // или None
-                        preferred_sectors: Some("None".to_string()),  // или реальное значение
+                        name: Some(name.to_string()),
+                        company: Some(company.to_string()),
+                        description: Some(description.to_string()),
+                        city: Some(city.to_string()),
+                        phone_number: Some(phone.to_string()),
+                        email: Some(email.to_string()),
+                        preferred_sectors: Some("None".to_string()),
                     };
 
                     investor_infos.push(investor_info);

@@ -2,11 +2,11 @@ use axum::{Extension, Json};
 use axum::{extract::Query, routing::get, routing::post, Router};
 use std::sync::Arc;
 use reqwest::Client;
-use crate::handlers::investors::investors;
-use crate::models::searchParams::SearchParams;
-use crate::handlers::survey::handle_survey;
+use crate::handlers::search_investor::investors_handler::investors_handler;
+use crate::models::search_params::SearchParams;
+use crate::handlers::send_email::survey_handler::handle_survey;
 use crate::models::survey::SurveyResponse;
-use crate::handlers::email::{test_send_email, authorize, oauth2_callback}; // Импортируйте oauth2_callback
+use crate::handlers::send_email::oauth_handler::{test_send_email, authorize, oauth2_callback};
 
 pub fn create_router(client: Arc<Client>, hubspot_access_token: String, ai_api_key: String, mongo_client: Arc<mongodb::Client>) -> Router {
     let client_clone1 = Arc::clone(&client);
@@ -20,7 +20,7 @@ pub fn create_router(client: Arc<Client>, hubspot_access_token: String, ai_api_k
             let ai_api_key = ai_api_key_clone1.clone();
             async move {
                 println!("Handling /investors request");
-                investors(client, hubspot_access_token, ai_api_key, Query(params)).await
+                investors_handler(client, hubspot_access_token, ai_api_key, Query(params)).await
             }
         }))
         .route(
@@ -38,6 +38,6 @@ pub fn create_router(client: Arc<Client>, hubspot_access_token: String, ai_api_k
             }),
         )
         .route("/test_send_email", get(test_send_email))
-        .route("/authorize", get(authorize)) // Новый маршрут для авторизации
-        .route("/oauth2/callback", get(oauth2_callback)) // Новый маршрут для обработки перенаправления
+        .route("/authorize", get(authorize))
+        .route("/oauth2/callback", get(oauth2_callback))
 }

@@ -6,7 +6,7 @@ use oauth2::basic::BasicClient;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthUrl, AuthorizationCode, ClientId, ClientSecret, RedirectUrl, TokenResponse, TokenUrl};
 
-pub async fn send_email_oauth2(
+pub async fn send_email(
     to: &str,
     subject: &str,
     body: &str,
@@ -32,7 +32,7 @@ pub async fn send_email_oauth2(
         .await?;
 
     let access_token = token_result.access_token().secret();
-    println!("Access token received: {:?}", access_token); // Логирование токена доступа
+    println!("Access token received: {:?}", access_token);
 
     // Создание сообщения
     let email = Message::builder()
@@ -51,7 +51,7 @@ pub async fn send_email_oauth2(
 
     let mailer = SmtpTransport::relay("smtp.gmail.com")?
         .credentials(creds)
-        .authentication(vec![Mechanism::Plain]) // Использование механизма Plain
+        .authentication(vec![Mechanism::Plain])
         .build();
 
     // Отправка email

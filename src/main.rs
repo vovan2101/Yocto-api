@@ -10,14 +10,8 @@ use tower_http::cors::{CorsLayer, Any};
 
 mod models;
 mod routes;
-mod handlers {
-    pub mod hubspot;
-    pub mod ai;
-    pub mod investors;
-    pub mod survey;
-    pub mod send_email;
-    pub mod email;
-}
+mod handlers;
+mod services;
 
 #[tokio::main]
 async fn main() {
