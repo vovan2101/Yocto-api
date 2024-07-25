@@ -1,22 +1,23 @@
-use axum::{extract::Query, response::Html};
+use axum::{extract::Query, response::{IntoResponse, Redirect}};
 use std::env;
 use crate::models::auth_query::AuthQuery;
-use crate::services::send_email::oauth_service::generate_oauth_url;
 use crate::services::send_email::oauth_callback_service::oauth2_callback_service;
+use crate::services::send_email::oauth_service::generate_oauth_url;
 use crate::services::send_email::email_test_service::test_send_email_service;
 
-pub async fn oauth2_callback(Query(query): Query<AuthQuery>) -> Html<&'static str> {
-    oauth2_callback_service(query).await
+pub async fn oauth2_callback(Query(query): Query<AuthQuery>) -> impl IntoResponse {
+    oauth2_callback_service(query).await;
+    Redirect::temporary("http://localhost:8080/survey")
 }
 
-pub async fn authorize() -> &'static str {
+pub async fn authorize() -> impl IntoResponse {
     let client_id = env::var("CLIENT_ID").expect("CLIENT_ID must be set");
     let redirect_url = env::var("REDIRECT_URL").expect("REDIRECT_URL must be set");
 
     let (auth_url, _csrf_token) = generate_oauth_url(&client_id, &redirect_url);
-    println!("Please go to this URL and authorize the application: {}", auth_url);
+    println!("Redirecting to: {}", auth_url);
 
-    "Authorization URL generated. Please check the server logs."
+    Redirect::temporary(&auth_url)
 }
 
 pub async fn test_send_email() -> &'static str {

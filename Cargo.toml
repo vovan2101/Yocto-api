@@ -12,10 +12,11 @@ tokio = { version = "1.32.0", features = ["full"] }
 tower = "0.4.13"
 tower-http = { version = "0.5.2", features = ["cors"] }
 hyper = "1.4.0"
-reqwest = { version = "0.12.5", features = ["json"] }
+reqwest = { version = "0.12.5", features = ["json", "multipart", "blocking"] }
 mongodb = { version = "2.5.0", features = ["tokio-runtime"] }
 futures = "0.3"
 lettre = "0.11.7"
 oauth2 = "4.4.2"
 url = "2.2.2"
 lazy_static = "1.5.0"
+base64 = "0.22.1"

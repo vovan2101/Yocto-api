@@ -1,68 +1,45 @@
-use lettre::message::header::ContentType;
-use lettre::message::{Message, SinglePart};
-use lettre::{SmtpTransport, Transport};
-use lettre::transport::smtp::authentication::{Credentials, Mechanism};
-use oauth2::basic::BasicClient;
-use oauth2::reqwest::async_http_client;
-use oauth2::{AuthUrl, AuthorizationCode, ClientId, ClientSecret, RedirectUrl, TokenResponse, TokenUrl};
+use base64::{engine::general_purpose::STANDARD, Engine};
+use reqwest::Client;
+use serde::Serialize;
+use std::error::Error;
+use crate::services::send_email::oauth_service::exchange_code_for_token;
 
-pub async fn send_email(
+#[derive(Serialize)]
+struct EmailPayload {
+    raw: String,
+}
+
+pub async fn send_email_via_gmail(
     to: &str,
     subject: &str,
     body: &str,
     from_email: &str,
-    auth_code: &str,
-    client_id: &str,
-    client_secret: &str,
-    redirect_url: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    // Настройка OAuth2 клиента
-    let client = BasicClient::new(
-        ClientId::new(client_id.to_string()),
-        Some(ClientSecret::new(client_secret.to_string())),
-        AuthUrl::new("https://accounts.google.com/o/oauth2/auth".to_string())?,
-        Some(TokenUrl::new("https://oauth2.googleapis.com/token".to_string())?)
-    )
-    .set_redirect_uri(RedirectUrl::new(redirect_url.to_string())?);
+    access_token: &str,
+) -> Result<(), Box<dyn Error>> {
+    // Проверка полученного токена
+    println!("Access token: {:?}", access_token);
 
-    // Обмен кода авторизации на токен доступа
-    println!("Exchanging authorization code for access token...");
-    let token_result = client.exchange_code(AuthorizationCode::new(auth_code.to_string()))
-        .request_async(async_http_client)
+    let email = format!(
+        "From: {}\r\nTo: {}\r\nSubject: {}\r\n\r\n{}",
+        from_email, to, subject, body
+    );
+    let email_base64 = STANDARD.encode(email);
+
+    let payload = EmailPayload { raw: email_base64 };
+
+    let client = Client::new();
+    let response = client
+        .post("https://gmail.googleapis.com/gmail/v1/users/me/messages/send")
+        .bearer_auth(access_token)
+        .json(&payload)
+        .send()
         .await?;
 
-    let access_token = token_result.access_token().secret();
-    println!("Access token received: {:?}", access_token);
-
-    // Создание сообщения
-    let email = Message::builder()
-        .from(from_email.parse()?)
-        .reply_to(from_email.parse()?)
-        .to(to.parse()?)
-        .subject(subject)
-        .singlepart(
-            SinglePart::builder()
-                .header(ContentType::TEXT_PLAIN)
-                .body(body.to_string()),
-        )?;
-
-    // Настройка транспортного средства для отправки email
-    let creds = Credentials::new(from_email.to_string(), access_token.to_string());
-
-    let mailer = SmtpTransport::relay("smtp.gmail.com")?
-        .credentials(creds)
-        .authentication(vec![Mechanism::Plain])
-        .build();
-
-    // Отправка email
-    match mailer.send(&email) {
-        Ok(_) => {
-            println!("Email sent successfully!");
-            Ok(())
-        }
-        Err(e) => {
-            println!("Could not send email: {:?}", e);
-            Err(Box::new(e))
-        }
+    if response.status().is_success() {
+        println!("Email sent successfully!");
+        Ok(())
+    } else {
+        println!("Failed to send email: {:?}", response.text().await?);
+        Err(Box::from("Failed to send email"))
     }
 }
