@@ -6,7 +6,7 @@ use crate::services::send_email::oauth_service::generate_oauth_url;
 use crate::services::send_email::email_test_service::test_send_email_service;
 
 pub async fn oauth2_callback(Query(query): Query<AuthQuery>) -> impl IntoResponse {
-    oauth2_callback_service(query).await;
+    let _ = oauth2_callback_service(query).await;
     Redirect::temporary("http://localhost:8080/survey")
 }
 

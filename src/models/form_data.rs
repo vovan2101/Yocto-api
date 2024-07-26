@@ -1,8 +1,8 @@
-// src/models.rs
+// src/models/form_data.rs
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct FormData {
     pub first_name: String,
     pub last_name: String,
@@ -13,9 +13,15 @@ pub struct FormData {
     pub industry: String,
     pub website: Option<String>,
     pub pitch_deck: String,
+    pub headquartered: String,
+    pub country: String,
+    pub legal_structure: String,
+    pub raising_round: String,
+    pub raising_amount: String,
+    pub pre_money_valuation: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ExternalFormData {
     pub first_name: String,
     pub last_name: String,
@@ -26,6 +32,12 @@ pub struct ExternalFormData {
     pub industry: String,
     pub website: Option<String>,
     pub pitch_deck: String,
+    pub headquartered: String,
+    pub country: String,
+    pub legal_structure: String,
+    pub raising_round: String,
+    pub raising_amount: String,
+    pub pre_money_valuation: Option<String>,
 }
 
 impl From<FormData> for ExternalFormData {
@@ -40,6 +52,12 @@ impl From<FormData> for ExternalFormData {
             industry: form_data.industry,
             website: form_data.website,
             pitch_deck: form_data.pitch_deck,
+            headquartered: form_data.headquartered,
+            country: form_data.country,
+            legal_structure: form_data.legal_structure,
+            raising_round: form_data.raising_round,
+            raising_amount: form_data.raising_amount,
+            pre_money_valuation: form_data.pre_money_valuation,
         }
     }
 }

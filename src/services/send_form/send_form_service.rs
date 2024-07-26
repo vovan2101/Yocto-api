@@ -3,6 +3,7 @@ use std::error::Error;
 use crate::models::form_data::ExternalFormData;
 
 pub async fn send_form(form_data: ExternalFormData) -> Result<(), Box<dyn Error>> {
+    println!("Sending form data: {:?}", form_data);
     let client = Client::new();
     let response = client.post("https://precursorvc.com/startup/")
         .form(&form_data)
@@ -10,10 +11,11 @@ pub async fn send_form(form_data: ExternalFormData) -> Result<(), Box<dyn Error>
         .await?;
         
     if response.status().is_success() {
+        println!("Response status: {}", response.status());
         println!("Form sent successfully!");
         Ok(())
     } else {
-        println!("Failed to send form: {:?}", response.text().await?);
+        println!("Response status: {}", response.status());
         Err(Box::from("Failed to send form"))
     }
 }
