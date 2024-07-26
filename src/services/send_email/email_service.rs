@@ -2,7 +2,6 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use reqwest::Client;
 use serde::Serialize;
 use std::error::Error;
-use crate::services::send_email::oauth_service::exchange_code_for_token;
 
 #[derive(Serialize)]
 struct EmailPayload {

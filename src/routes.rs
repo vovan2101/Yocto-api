@@ -3,6 +3,7 @@ use axum::{extract::Query, routing::get, routing::post, Router};
 use std::sync::Arc;
 use reqwest::Client;
 use crate::handlers::search_investor::investors_handler::investors_handler;
+use crate::handlers::send_form::send_form_handler::handle_send_form;
 use crate::models::search_params::SearchParams;
 use crate::handlers::send_email::survey_handler::handle_survey;
 use crate::models::survey::SurveyResponse;
@@ -40,4 +41,5 @@ pub fn create_router(client: Arc<Client>, hubspot_access_token: String, ai_api_k
         .route("/test_send_email", get(test_send_email))
         .route("/authorize", get(authorize))
         .route("/oauth2/callback", get(oauth2_callback))
+        .route("/send-form", post(handle_send_form))
 }
